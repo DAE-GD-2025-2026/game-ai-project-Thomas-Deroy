@@ -25,6 +25,8 @@ protected:
 	FTargetData Target;
 };
 
+// --------------------------------------------------------------------------------------------------------
+
 // SteeringBehaviors 
 class Seek : public ISteeringBehavior
 {
@@ -36,6 +38,8 @@ public:
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
 };
 
+// --------------------------------------------------------------------------------------------------------
+
 class Flee : public ISteeringBehavior
 {
 public:
@@ -46,17 +50,76 @@ public:
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
 };
 
+// --------------------------------------------------------------------------------------------------------
+
 class Arrive : public ISteeringBehavior
 {
 public:
 	Arrive() = default;
-	virtual ~Arrive() override = default;
+	virtual ~Arrive() override;
 
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
 	
 	float SlowRadius = 600.f;
 	float TargetRadius = 100.f;
 	float OriginalMaxSpeed = -1.f;
+	ASteeringAgent* BoundAgent = nullptr;
 };
 
+// --------------------------------------------------------------------------------------------------------
 
+class Face : public ISteeringBehavior
+{
+public:
+	Face() = default;
+	virtual ~Face() override = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
+};
+
+// --------------------------------------------------------------------------------------------------------
+
+class Pursuit : public ISteeringBehavior
+{
+public:
+	Pursuit() = default;
+	virtual ~Pursuit() override = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
+
+	float MaxPredictionTime = 2.0f; 
+};
+
+// --------------------------------------------------------------------------------------------------------
+
+class Evade : public ISteeringBehavior
+{
+public:
+	Evade() = default;
+	virtual ~Evade() override = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
+
+	float MaxPredictionTime = 2.0f; 
+};
+
+// --------------------------------------------------------------------------------------------------------
+
+class Wander : public Seek
+{
+public:
+	Wander() = default;
+	virtual ~Wander() override = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
+	
+	void SetWanderOffset(float offset){ Offset = offset; }
+	void SetWanderRadius(float radius){ Radius = radius; }
+	void SetMaxAngleChange(float angle){ MaxAngleChange = angle; }
+
+protected:
+	float Offset = 400.f;          
+	float Radius = 200.f;          
+	float MaxAngleChange = 45.f;   
+	float WanderAngle = 0.f;       
+};
