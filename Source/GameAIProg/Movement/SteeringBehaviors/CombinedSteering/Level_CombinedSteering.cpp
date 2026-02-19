@@ -1,6 +1,7 @@
-﻿#include "Level_CombinedSteering.h"
+#include "Level_CombinedSteering.h"
 
 #include "imgui.h"
+#include <vector>
 
 
 // Sets default values
@@ -15,6 +16,27 @@ void ALevel_CombinedSteering::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SeekAgent = GetWorld()->SpawnActor<ASteeringAgent>(SteeringAgentClass, FVector{-300.f, 0.f, 90.f}, FRotator::ZeroRotator);
+	WandererAgent = GetWorld()->SpawnActor<ASteeringAgent>(SteeringAgentClass, FVector{300.f, 0.f, 90.f}, FRotator::ZeroRotator);
+	if (!IsValid(SeekAgent) || !IsValid(WandererAgent))
+		return;
+
+	SeekBehavior = MakeUnique<Seek>();
+	EvadeBehavior = MakeUnique<Evade>();
+	WanderBehavior = MakeUnique<Wander>();
+
+	std::vector<BlendedSteering::WeightedBehavior> weightedBehaviors{
+		{SeekBehavior.Get(), 0.7f},
+		{EvadeBehavior.Get(), 1.0f}
+	};
+
+	BlendedBehavior = MakeUnique<BlendedSteering>(weightedBehaviors);
+
+	SeekAgent->SetSteeringBehavior(BlendedBehavior.Get());
+	WandererAgent->SetSteeringBehavior(WanderBehavior.Get());
+
+	SeekAgent->SetDebugRenderingEnabled(CanDebugRender);
+	WandererAgent->SetDebugRenderingEnabled(CanDebugRender);
 }
 
 void ALevel_CombinedSteering::BeginDestroy()
@@ -67,7 +89,10 @@ void ALevel_CombinedSteering::Tick(float DeltaTime)
 	
 		if (ImGui::Checkbox("Debug Rendering", &CanDebugRender))
 		{
-   // TODO: Handle the debug rendering of your agents here :)
+			if (IsValid(SeekAgent))
+				SeekAgent->SetDebugRenderingEnabled(CanDebugRender);
+			if (IsValid(WandererAgent))
+				WandererAgent->SetDebugRenderingEnabled(CanDebugRender);
 		}
 		ImGui::Checkbox("Trim World", &TrimWorld->bShouldTrimWorld);
 		if (TrimWorld->bShouldTrimWorld)
@@ -84,19 +109,38 @@ void ALevel_CombinedSteering::Tick(float DeltaTime)
 		ImGui::Text("Behavior Weights");
 		ImGui::Spacing();
 
-
-		// ImGuiHelpers::ImGuiSliderFloatWithSetter("Seek",
-		// 	pBlendedSteering->GetWeightedBehaviorsRef()[0].Weight, 0.f, 1.f,
-		// 	[this](float InVal) { pBlendedSteering->GetWeightedBehaviorsRef()[0].Weight = InVal; }, "%.2f");
-		//
-		// ImGuiHelpers::ImGuiSliderFloatWithSetter("Wander",
-		// pBlendedSteering->GetWeightedBehaviorsRef()[1].Weight, 0.f, 1.f,
-		// [this](float InVal) { pBlendedSteering->GetWeightedBehaviorsRef()[1].Weight = InVal; }, "%.2f");
+		if (BlendedBehavior)
+		{
+			auto& weightedBehaviors = BlendedBehavior->GetWeightedBehaviorsRef();
+			if (weightedBehaviors.size() >= 2)
+			{
+				ImGuiHelpers::ImGuiSliderFloatWithSetter("Seek",
+					weightedBehaviors[0].Weight, 0.f, 1.f,
+					[this](float InVal) { BlendedBehavior->GetWeightedBehaviorsRef()[0].Weight = InVal; }, "%.2f");
+				ImGuiHelpers::ImGuiSliderFloatWithSetter("Evade",
+					weightedBehaviors[1].Weight, 0.f, 1.f,
+					[this](float InVal) { BlendedBehavior->GetWeightedBehaviorsRef()[1].Weight = InVal; }, "%.2f");
+			}
+		}
 	
 		//End
 		ImGui::End();
 	}
 #pragma endregion
-
+	
 	// Combined Steering Update
+	if (!IsValid(SeekAgent) || !IsValid(WandererAgent) || !SeekBehavior || !EvadeBehavior)
+		return;
+
+	if (UseMouseTarget)
+	{
+		SeekBehavior->SetTarget(MouseTarget);
+	}
+
+	FTargetData WandererTarget;
+	WandererTarget.Position = WandererAgent->GetPosition();
+	WandererTarget.Orientation = WandererAgent->GetRotation();
+	WandererTarget.LinearVelocity = WandererAgent->GetLinearVelocity();
+	WandererTarget.AngularVelocity = WandererAgent->GetAngularVelocity();
+	EvadeBehavior->SetTarget(WandererTarget);
 }

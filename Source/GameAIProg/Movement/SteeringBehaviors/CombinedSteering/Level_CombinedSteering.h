@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <memory>
 #include "CombinedSteeringBehaviors.h"
 #include "GameAIProg/Shared/Level_Base.h"
 #include "GameAIProg/Movement/SteeringBehaviors/Steering/SteeringBehaviors.h"
@@ -29,8 +30,14 @@ protected:
 
 private:
 	//Datamembers
-	bool UseMouseTarget = false;
+	bool UseMouseTarget = true;
 	bool CanDebugRender = false;
 
-	
+	ASteeringAgent* SeekAgent = nullptr; // non-owning
+	ASteeringAgent* WandererAgent = nullptr; // non-owning
+
+	TUniquePtr<Seek> SeekBehavior{};
+	TUniquePtr<Evade> EvadeBehavior{};
+	TUniquePtr<Wander> WanderBehavior{};
+	TUniquePtr<BlendedSteering> BlendedBehavior{};
 };
