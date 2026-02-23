@@ -171,6 +171,12 @@ SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
     FVector2D Direction = TargetPos - CurrentPos;
     float Distance = Direction.Size();
     
+    if (Distance > EvadeRadius)
+    {
+        steering.IsValid = false; 
+        return steering; 
+    }
+    
     float Speed = Agent.GetLinearVelocity().Size();
     float PredictionTime;
     
@@ -187,11 +193,13 @@ SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
     FVector2D PredictedPosition = TargetPos + (Target.LinearVelocity * PredictionTime);
     
     steering.LinearVelocity = CurrentPos - PredictedPosition; // Flee predicted position
+    steering.IsValid = true;
 
     // Debug rendering
     if (Agent.GetDebugRenderingEnabled())
     {
         UWorld* World = Agent.GetWorld();
+        DrawDebugCircle(World, FVector(CurrentPos, 0.f), EvadeRadius, 32, FColor::Orange, false, -1, 0, 1.f, FVector(0,1,0), FVector(1,0,0));
         DrawDebugSphere(World, FVector(PredictedPosition, 0), 25.f, 8, FColor::Red, false, -1, 0, 1.f);
         DrawDebugLine(World, FVector(TargetPos, 0), FVector(PredictedPosition, 0), FColor::White, false, -1, 0, 1.f);
     }

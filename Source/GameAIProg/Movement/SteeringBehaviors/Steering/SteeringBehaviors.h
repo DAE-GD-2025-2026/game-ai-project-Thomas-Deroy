@@ -101,6 +101,7 @@ public:
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent& Agent) override;
 
 	float MaxPredictionTime = 2.0f; 
+	float EvadeRadius = 500.f;
 };
 
 // --------------------------------------------------------------------------------------------------------
