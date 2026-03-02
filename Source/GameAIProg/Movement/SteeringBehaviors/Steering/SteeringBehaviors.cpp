@@ -101,7 +101,7 @@ SteeringOutput Face::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
     
     float AngleDiff = TargetAngle - CurrentAngle;
 
-    // Normalize angle to [-180, 180]
+    // Normalize angle 
     while (AngleDiff > 180.f) AngleDiff -= 360.f;
     while (AngleDiff < -180.f) AngleDiff += 360.f;
     

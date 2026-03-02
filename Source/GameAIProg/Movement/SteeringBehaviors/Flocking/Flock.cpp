@@ -44,18 +44,18 @@ Flock::Flock(
 	});
 	
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
+	// Setup spatial partitioning
 	pPartitionedSpace = std::make_unique<CellSpace>(pWorld, WorldSize, WorldSize, NrOfCellsX, NrOfCellsX, FlockSize);
-	
 	OldPositions.SetNum(FlockSize);
 #endif
 	
-	
+	// Spawn agents
 	for (int i = 0; i < FlockSize; ++i)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     
-		// Random spawn position
+		// Random position
 		FVector RandomPos = FVector(FMath::RandRange(-500.f, 500.f), FMath::RandRange(-500.f, 500.f), 0.f);
     
 		Agents[i] = pWorld->SpawnActor<ASteeringAgent>(AgentClass, RandomPos, FRotator::ZeroRotator, SpawnParams);
@@ -63,7 +63,7 @@ Flock::Flock(
 		if (Agents[i])
 		{
 			Agents[i]->SetSteeringBehavior(pPrioritySteering.get());
-			Agents[i]->SetDebugRenderingEnabled(false); // I wanna see the screen
+			Agents[i]->SetDebugRenderingEnabled(false);
 			
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
 			pPartitionedSpace->AddAgent(*Agents[i]);
@@ -79,6 +79,7 @@ Flock::Flock(
 
 Flock::~Flock()
 {
+	// Destroy agents
 	for (ASteeringAgent* pAgent : Agents)
 	{
 		if (pAgent && pAgent->IsValidLowLevel())
@@ -95,22 +96,23 @@ Flock::~Flock()
 
 void Flock::Tick(float DeltaTime)
 {
-	// Invisible circle in the middle bullshit, but fixed it kinda
+	// Update evade target
 	if (pAgentToEvade && pAgentToEvade->IsValidLowLevel())
 	{
 		pEvadeBehavior->SetTarget(FSteeringParams{ pAgentToEvade->GetPosition() });
 	}
 	else if (pEvadeBehavior)
 	{
+		// Move target far away if no agent to evade
 		pEvadeBehavior->SetTarget(FSteeringParams{ FVector2D(99999.f, 99999.f) }); 
 	}
 	
 	for (int i = 0; i < Agents.Num(); ++i)
 	{
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
+		// Update spatial cell + neighbors
 		pPartitionedSpace->UpdateAgentCell(*Agents[i], OldPositions[i]);
 		OldPositions[i] = Agents[i]->GetPosition();
-        
 		pPartitionedSpace->RegisterNeighbors(*Agents[i], NeighborhoodRadius); 
 #else
 		RegisterNeighbors(Agents[i]);
@@ -301,8 +303,6 @@ FVector2D Flock::GetAverageNeighborVelocity() const
 void Flock::SetTarget_Seek(FSteeringParams const& Target)
 {
 	if (pSeekBehavior)
-	{
 		pSeekBehavior->SetTarget(Target);
-	}
 }
 
