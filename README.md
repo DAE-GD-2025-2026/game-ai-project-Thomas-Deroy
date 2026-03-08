@@ -1,5 +1,8 @@
 # Game AI Project - Algorithms 2
 
+> [!IMPORTANT]
+> **HOW TO RUN IT?** You right click on the .uproject and open it with **Rider**, Otherwise it wouldn't run.
+
 ## Overview
 This repository contains implementations of AI steering behaviors, a Boids flocking simulation, and performance optimizations using spatial partitioning.
 
