@@ -58,6 +58,11 @@ private:
 	int SelectedHeuristic = 4;
 	GameAI::HeuristicFunctions::Heuristic HeuristicFunction = GameAI::HeuristicFunctions::Chebyshev;
 	std::vector<GameAI::Node*> FoundPath{};
+	
+	bool bDrawGrid = true;
+	bool bDrawNodeNumbers = false;
+	bool bDrawConnections = false;
+	bool bDrawConnectionsCosts = false;
 
 	void CalculatePath();
 	void UpdateAgentPath(std::vector<GameAI::Node*> const & Path);
