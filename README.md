@@ -26,3 +26,15 @@ This repository contains implementations of AI steering behaviors, a Boids flock
 ### 3. Algorithmic Optimizations
 * **Spatial Partitioning:** Divides the 2D world into a uniform grid of cells. This reduces the $O(n^{2})$ complexity of neighbor-checking by only querying agents within the current and adjacent cells .
 * **Memory Pooling:** Utilizes a fixed-size container to store agent neighborhood records, avoiding performance-heavy memory allocations and fragmentation during the simulation loop.
+
+### 4. Graph Theory
+* **Graph Representations:** Implements the foundation for defining and visualizing relationships between components using Nodes (Vertices) and Connections (Edges). The project utilizes an Edge List notation to represent both directed and undirected graphs.
+* **Eulerian Paths:** Features algorithms to determine graph Eulerianity (whether a path can traverse every connection exactly once). It uses Depth-First Search (DFS) to verify graph connectivity before constructing the final Eulerian trail or cycle.
+
+### 5. Pathfinding Algorithms
+* **Breadth-First Search (BFS):** An uninformed search algorithm that explores the graph level-by-level using a queue. It guarantees finding the optimal path in unweighted graphs.
+* **A\* Search (A-Star):** An informed search algorithm that combines the best aspects of Dijkstra and Greedy Best-First-Search. It uses a heuristic function (estimated cost to the goal) combined with the actual travel cost to efficiently calculate the shortest path.
+
+### 6. Navigation Meshes
+* **NavGraph Generation:** Converts an abstraction of walkable space (triangulated polygons) into a traversable graph structure. Nodes are placed in the middle of connecting triangle edges to allow for pathfinding.
+* **Path Smoothing:** Since raw A\* paths on a navmesh jump between the center of edges, the **Simple Stupid Funnel Algorithm (SSFA)** is used to optimize the path. It acts like "string pulling" to generate a smoother route from the start to the goal.
