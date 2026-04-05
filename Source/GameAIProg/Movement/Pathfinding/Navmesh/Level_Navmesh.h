@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GraphTheory/Level_GraphTheory.h"
+#include "GraphTheory/Algorithms/NavGraphPathfinding.h"
 #include "Shared/Graph/NavGraph/NavGraph.h"
 #include "Level_Navmesh.generated.h"
 
@@ -31,6 +32,9 @@ protected:
 private:
 	std::unique_ptr<GameAI::NavGraph> NavigationGraph;
 	std::unique_ptr<GameAI::GraphRenderer> Renderer;
+	
+	std::vector<GameAI::NavLine> DebugDrawPortals{};
+	std::vector<FVector2D> DebugDrawNodePositions{};
 	
 	UPROPERTY()
 	ASteeringAgent* Agent{nullptr}; // ref

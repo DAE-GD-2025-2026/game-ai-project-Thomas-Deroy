@@ -9,36 +9,95 @@
 using namespace GameAI;
 
 std::vector<FVector2D> NavMeshPathfinding::FindPath(const FVector2D& startPos, const FVector2D& endPos,
-	NavGraph* const pNavGraph, std::vector<FVector2D>& debugNodePositions, std::vector<NavLine>& debugPortals) 
+    NavGraph* const pNavGraph, std::vector<FVector2D>& debugNodePositions, std::vector<NavLine>& debugPortals) 
 {
-	//Create the path to return
-	std::vector<FVector2D> finalPath{};
+    // Path result
+    std::vector<FVector2D> finalPath{};
 
-	//Get the start and endTriangle
+    // Get start and end triangles
+    auto const* pStartTriangle = pNavGraph->GetNavPolygon()->GetTriangleAtPosition(startPos, true);
+    auto const* pEndTriangle = pNavGraph->GetNavPolygon()->GetTriangleAtPosition(endPos, true);
 
-	//We have valid start/end triangles and they are not the same
-	//=> Start looking for a path
-	//Copy the graph
+    // No valid path if outside navmesh
+    if (pStartTriangle == nullptr || pEndTriangle == nullptr)
+        return finalPath;
 
-	//Create Extra node for the Start Node (Agent's position
+    // Same triangle -> straight line
+    if (pStartTriangle == pEndTriangle)
+    {
+        finalPath.push_back(startPos);
+        finalPath.push_back(endPos);
+        return finalPath;
+    }
 
-	//Create extra node for the endNode
+    // Clone graph to modify safely
+    auto pCloneGraph = pNavGraph->Clone();
 
-	//Run A star on new graph
+    // Create start node
+    auto pStartNode = std::make_unique<NavGraphNode>(startPos, -1); 
+    auto pRawStartNode = pStartNode.get();
+    
+    pCloneGraph->AddNode(std::move(pStartNode));
+    int startNodeId = pRawStartNode->GetId();
 
-	//Debug Visualisation
+    // Connect start node to triangle portals
+    for (auto const& edge : pStartTriangle->GetEdges())
+    {
+        int edgeIdx = pNavGraph->GetNavPolygon()->FindEdgeIndex(edge).value_or(-1);
+        int nodeId = pCloneGraph->GetNodeIdFromEdgeIndex(edgeIdx);
+        
+        if (nodeId != Graphs::InvalidNodeId)
+            pCloneGraph->AddConnection(std::make_unique<Connection>(startNodeId, nodeId));
+    }
 
-	// Extra: Run optimiser on new graph (First check if everything works without SSFA!)
-	// debugPortals = SSFA::FindPortals(nodes, *pNavGraph->GetNavPolygon());
-	// finalPath = SSFA::OptimizePortals(debugPortals, *pNavGraph->GetNavPolygon());
-	
-	return finalPath;
+    // Create end node
+    auto pEndNode = std::make_unique<NavGraphNode>(endPos, -1);
+    auto pRawEndNode = pEndNode.get();
+    
+    pCloneGraph->AddNode(std::move(pEndNode));
+    int endNodeId = pRawEndNode->GetId();
+
+    // Connect triangle portals to end node
+    for (auto const& edge : pEndTriangle->GetEdges())
+    {
+        int edgeIdx = pNavGraph->GetNavPolygon()->FindEdgeIndex(edge).value_or(-1);
+        int nodeId = pCloneGraph->GetNodeIdFromEdgeIndex(edgeIdx);
+        
+        if (nodeId != Graphs::InvalidNodeId)
+            pCloneGraph->AddConnection(std::make_unique<Connection>(nodeId, endNodeId));
+    }
+
+    // Update connection costs
+    pCloneGraph->SetConnectionCostsToDistances();
+
+    // Run A*
+    AStar pathfinder(pCloneGraph.get(), HeuristicFunctions::Euclidean);
+    std::vector<Node*> nodePath = pathfinder.FindPath(
+        pCloneGraph->GetNode(startNodeId).get(),
+        pCloneGraph->GetNode(endNodeId).get());
+
+    // No path found
+    if (nodePath.empty())
+        return finalPath;
+
+    // Convert nodes to positions
+    for (Node* pNode : nodePath)
+    {
+        finalPath.push_back(pNode->GetPosition());
+        debugNodePositions.push_back(pNode->GetPosition());
+    }
+
+    // Smooth path
+    debugPortals = SSFA::FindPortals(nodePath, *pNavGraph->GetNavPolygon());
+    finalPath = SSFA::OptimizePortals(debugPortals, *pNavGraph->GetNavPolygon());
+    
+    return finalPath;
 }
 
 std::vector<FVector2D> NavMeshPathfinding::FindPath(const FVector2D& startPos, const FVector2D& endPos, NavGraph* const pNavGraph)
 {
-	std::vector<FVector2D> debugNodePositions{};
-	std::vector<NavLine> debugPortals{};
+    std::vector<FVector2D> debugNodePositions{};
+    std::vector<NavLine> debugPortals{};
 
-	return FindPath(startPos, endPos, pNavGraph, debugNodePositions, debugPortals);
+    return FindPath(startPos, endPos, pNavGraph, debugNodePositions, debugPortals);
 }

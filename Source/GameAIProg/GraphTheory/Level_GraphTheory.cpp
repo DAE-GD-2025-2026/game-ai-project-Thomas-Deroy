@@ -5,6 +5,7 @@
 
 #include "Algorithms/EulerianPath.h"
 #include "Shared/GameAISpectator.h"
+#include "Algorithms/GraphColoring.h"
 
 using namespace GameAI;
 
@@ -55,6 +56,8 @@ void ALevel_GraphTheory::BeginPlay()
 	Graph.AddConnection(n1, n3);
 	Graph.AddConnection(n2, n4);
 	Graph.AddConnection(n3, n4);
+	
+	Graph.SetConnectionCostsToDistances();
 	
 	// Spawn the Agent
 	Agent = GetWorld()->SpawnActor<ASteeringAgent>(SteeringAgentClass, 
@@ -117,10 +120,43 @@ void ALevel_GraphTheory::Tick(float DeltaTime)
 	}
 #pragma endregion UI
 	
-
+	
 	if (Renderer)
 	{
 		Renderer->RenderGraph(Graph);
+	
+		// Run coloring
+		std::map<int, int> coloredNodes = GameAI::GraphColoring::ColorGraph(&Graph);
+       
+		// Color palette
+		std::vector<FColor> colorPalette = 
+		{ 
+			FColor::Red, FColor::Blue, FColor::Green, 
+			FColor::Yellow, FColor::Magenta, FColor::Cyan 
+		};
+
+		// Draw colored spheres
+		for (auto& pair : coloredNodes)
+		{
+			int nodeId = pair.first;
+			int colorIndex = pair.second;
+           
+			// Wrap if more colors needed
+			FColor nodeColor = colorPalette[colorIndex % colorPalette.size()]; 
+
+			// Get node position
+			if (GameAI::Node* pNode = Graph.GetNode(nodeId).get())
+			{
+				FVector pointPos = 
+				{ 
+					pNode->GetPosition().X, 
+					pNode->GetPosition().Y, 
+					50.0f // float above nodes
+				};
+            
+				DrawDebugSphere(GetWorld(), pointPos, 35.0f, 16, nodeColor, false, 0.0f, 100, 3.0f);
+			}
+		}
 	}
 	
 	if (PlayerController = Cast<APlayerController>(GetWorld()->GetFirstLocalPlayerFromController()->PlayerController); 
@@ -128,6 +164,8 @@ void ALevel_GraphTheory::Tick(float DeltaTime)
 	{
 		if (PlayerGraphEditor->HasGraphUpdated()) 
 		{
+			Graph.SetConnectionCostsToDistances();
+			
 			GameAI::EulerianPath EulerAlg(&Graph);
 			GameAI::Eulerianity GraphEulerianity;
 		

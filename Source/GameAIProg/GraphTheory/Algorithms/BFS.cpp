@@ -25,8 +25,8 @@ std::vector<Node*> BFS::FindPath(Node* const pStartNode, Node* const pDestinatio
 	}
 
 	// Data needed
-	std::queue<Node*> openList;       // Nodes to explore
-	std::map<Node*, bool> visited;    // Track visited nodes
+	std::queue<Node*> openList; // Nodes to explore
+	std::map<Node*, bool> visited; // Track visited nodes
 	std::map<Node*, Node*> parentMap; // Stores where each node came from
 	
 	openList.push(pStartNode);
@@ -58,9 +58,9 @@ std::vector<Node*> BFS::FindPath(Node* const pStartNode, Node* const pDestinatio
 			// If not visited yet
 			if (!visited[neighborNode])
 			{
-				visited[neighborNode] = true;          // Mark visited
+				visited[neighborNode] = true; // Mark visited
 				parentMap[neighborNode] = currentNode; // Remember how we got here
-				openList.push(neighborNode);           // Explore it later
+				openList.push(neighborNode); // Explore it later
 			}
 		}
 	}

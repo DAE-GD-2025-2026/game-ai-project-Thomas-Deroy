@@ -1,5 +1,6 @@
 ﻿#include "AStar.h"
 #include <algorithm>
+#include <limits>
 
 using namespace GameAI;
 
@@ -105,10 +106,27 @@ std::vector<Node*> AStar::FindPath(Node* const pStartNode, Node* const pDestinat
 		closedList.push_back(currentRecord);
 	}
 
-	// If destination wasn't reached, return empty path
+	// If destination wasn't reached, find a fallback path
 	if (currentRecord.pNode != pDestinationNode)
 	{
-		return path;
+		float closestHeuristic = std::numeric_limits<float>::max();
+
+		for (const auto& record : closedList)
+		{
+			float heuristicToGoal = GetHeuristicCost(record.pNode, pDestinationNode);
+
+			if (heuristicToGoal < closestHeuristic)
+			{
+				closestHeuristic = heuristicToGoal;
+				currentRecord = record; // backtrack from closest node
+			}
+		}
+
+		// Safety check
+		if (currentRecord.pNode == nullptr)
+		{
+			return path;
+		}
 	}
 
 	// Reconstruct path by walking backwards
