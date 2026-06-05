@@ -136,11 +136,27 @@ void ALevel_PathfindingAStar::CalculatePath()
 	// Update the highlighted nodes in the renderer
 	std::vector<std::pair<int, FColor>> PathToHighlight{};
 	PathToHighlight.push_back({PathStartNodeId, FColor::Green});
+
 	if (!FoundPath.empty())
 	{
-		for (int Idx = 1; Idx < FoundPath.size() - 1; ++Idx)
+		for (int Idx = 1; Idx < FoundPath.size(); ++Idx) 
 		{
-			PathToHighlight.push_back({FoundPath[Idx]->GetId(), FColor::Yellow});
+			int CurrentNodeId = FoundPath[Idx]->GetId();
+
+			// Skip the target node
+			if (CurrentNodeId != PathEndNodeId)
+			{
+				// Highlight fallback end nodes in orange
+				if (Idx == FoundPath.size() - 1)
+				{
+					PathToHighlight.push_back({CurrentNodeId, FColor::Orange});
+				}
+				else
+				{
+					// Normal path nodes
+					PathToHighlight.push_back({CurrentNodeId, FColor::Yellow});
+				}
+			}
 		}
 	}
 	PathToHighlight.push_back({PathEndNodeId, FColor::Red});

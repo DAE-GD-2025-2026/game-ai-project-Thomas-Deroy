@@ -113,6 +113,14 @@ std::vector<Node*> AStar::FindPath(Node* const pStartNode, Node* const pDestinat
 
 		for (const auto& record : closedList)
 		{
+			TerrainNode* pTerrainNode = static_cast<TerrainNode*>(record.pNode);
+      
+			// Check if it's water
+			if (pTerrainNode && pTerrainNode->GetType() == TerrainNode::Type::Water)
+			{
+				continue; // Skip 
+			}
+			
 			float heuristicToGoal = GetHeuristicCost(record.pNode, pDestinationNode);
 
 			if (heuristicToGoal < closestHeuristic)
