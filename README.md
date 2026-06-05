@@ -8,6 +8,9 @@ This repository contains implementations of AI steering behaviors, a Boids flock
 
 ## Features
 
+> [!NOTE]
+> **EXTRA ASSIGNMENT:** Implemented Fallback Path from Pathfinding Algorithms (Week 5)
+
 ### 1. Steering Behaviors
 * **Seek / Flee:** Move directly towards or away from a target.
 * **Arrive:** Move towards a target and gradually slow down as it enters a defined radius.
